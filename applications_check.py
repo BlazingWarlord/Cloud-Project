@@ -14,22 +14,26 @@ def connection(hostname,username,password):
 
     stdin,stdout,stderr=client.exec_command('powershell -Command \"Get-NetTCPConnection | Select-Object LocalAddress,LocalPort,RemoteAddress,RemotePort,State\"')
     open_ports=stdout.read().decode().splitlines()
+    open_ = []
+    for port in open_ports:
+        if 'LocalPort' in port:
+            open_.append(port.split(':')[1])
+            
 
     client.close()
-    return [os,proc,open_ports]
+    return [os,proc,open_]
 
 def predict_server_type(running_applications, open_ports):
     # Mapping of application to server type
     application_server_mapping = {
-        "web": ["80", "443"],
-        "database": ["3306", "5432"],
-        "file_server": ["21", "22"],
-        "mail": ["25", "143", "110"],
+        "web": [" 80", " 443"],
+        "database": [" 3306", " 5432"],
+        "file_server": [" 21", " 22"],
+        "mail": [" 25", " 143", " 110"],
     }
 
-    # Check if any known application's ports are open
     for application, ports in application_server_mapping.items():
-        if set(ports).intersection(open_ports):
+        if set(ports).intersection(set(open_ports)):
             return application
 
     # If no known application's ports are open, suggest a generic server type
@@ -40,8 +44,7 @@ def predict_server_type(running_applications, open_ports):
 running_applications = ["web", "database"]
 open_ports = ["80", "443"]
 
-connection("localhost","Sharan","3021")
+l = connection("localhost","11110","Blazing123")
 
-predicted_server_type = predict_server_type(running_applications, open_ports)
+predicted_server_type = predict_server_type(l[1], l[2])
 print("Predicted Server Type:", predicted_server_type)
-
