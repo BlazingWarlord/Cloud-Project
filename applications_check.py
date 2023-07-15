@@ -8,12 +8,13 @@ def self_assess():
     cmd = "powershell -Command Get-Process"  
     proc = subprocess.run(cmd, shell=True, capture_output=True, text=True).stdout
 
+    print(proc)
+
     command = "Get-NetTCPConnection | Select-Object LocalAddress,LocalPort,RemoteAddress,RemotePort,State"
     open_ports = subprocess.run(['powershell.exe', '-Command', command], capture_output=True, text=True).stdout
 
 
     splitted = open_ports.split('\n')
-    print(splitted)
     open_ = []
     for port in splitted:
         if 'LocalPort' in port:
@@ -54,12 +55,39 @@ def predict_server_type(running_applications, open_ports):
         "mail": [" 25", " 143", " 110"],
     }
 
+
+    apps_application = []
+
+    apps = {('nginx','apache','tomcat'):"web",('mysql','postgresql','mongodb'):"database",("filezilla","samba", "nfs", "ftp"):"file_server",("postfix", "exim", "sendmail"):"Mail"}
+    
+    for app in running_applications:
+        app = app.lower()
+        for possible in apps:
+            for app_ in possible:
+                if app_ in app:
+                    apps_application.append(apps[possible])
+                    
+        
+        
+
+    apps_port = []
+
     for application, ports in application_server_mapping.items():
         if set(ports).intersection(set(open_ports)):
-            return application
+            apps_port.append(application)
+
+    result = [apps_port,apps_application]
+
+    result[0].extend(result[1])
+    percentage_set = set(result[0])
+
+    print("Percentage of predictions: \n")
+    
+    for i in percentage_set:
+        print(f"{i}: {(result[0].count(i)/len(result[0]))*100}%")
 
     # If no known application's ports are open, suggest a generic server type
-    return "generic_server"
+    return result if len(apps_port) > 0 or len(apps_application) > 0 else "generic_server"
 
 
 # Example usage with Paramiko data
@@ -68,6 +96,12 @@ open_ports = ["80", "443"]
 
 l = connection("localhost","11110","Blazing123")
 
+predicted_server_type = predict_server_type(l[1],l[2])
 
-predicted_server_type = predict_server_type(l[1], l[2])
-print("Predicted Server Type:", predicted_server_type)
+l = self_assess()
+
+print(l[1])
+
+predict_server_type(l[1],l[2])
+
+
