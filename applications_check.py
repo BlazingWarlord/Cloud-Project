@@ -8,8 +8,8 @@ def self_assess():
     cmd = "powershell -Command Get-Process"  
     proc = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
-    cmd= "powershell -Command Get-NetTCPConnection | Select-Object LocalAddress,LocalPort,RemoteAddress,RemotePort,State"
-    open_ports = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    command = "Get-NetTCPConnection | Select-Object LocalAddress,LocalPort,RemoteAddress,RemotePort,State"
+    open_ports = subprocess.run(['powershell.exe', '-Command', command], capture_output=True, text=True)
     
     return [os,proc,open_ports]
 
