@@ -2,13 +2,13 @@ import paramiko
 import subprocess
 
 def self_assess():
-    cmd="powershell.exe [System.Environment]::OSVersion.VersionString"
+    cmd="powershell -Command [System.Environment]::OSVersion.VersionString"
     os=subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
-    cmd = "powershell.exe Get-Process"  
+    cmd = "powershell -Command Get-Process"  
     proc = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
-    cmd= "powershell.exe Get-NetTCPConnection | Select-Object LocalAddress,LocalPort,RemoteAddress,RemotePort,State"
+    cmd= "powershell -Command Get-NetTCPConnection | Select-Object LocalAddress,LocalPort,RemoteAddress,RemotePort,State"
     open_ports = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     
     return [os,proc,open_ports]
