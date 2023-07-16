@@ -36,10 +36,11 @@ def check_range_ip(start_ip,end_ip,username,password):
     for ip in ips_within_range:
         try:
             results = connection(ip,username,password)
-            result_data[ip] = results
+            prediction = predict_server_type(results[1],results[2])
+            result_data[ip] = prediction
         except:
             pass
-    return result_data if len(result_data) > 0 else "No IPs detected in range"
+    return result_data
 
 
 def connection(hostname,username,password):
