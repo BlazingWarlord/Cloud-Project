@@ -26,7 +26,8 @@ def self_assess():
             open_.append(port.split(':')[1])
         
 
-    return [os,proc,open_]
+    predicted = predict_server_type(proc,open_)
+    return predicted
 
 
 def check_range_ip(start_ip,end_ip,username,password):
@@ -129,12 +130,4 @@ print(predicted)
 
 l = self_assess()
 
-l = check_range_ip('192.168.1.2','192.168.1.7','11110','Blazing123')
-
 print(l)
-
-
-
-
-
-
