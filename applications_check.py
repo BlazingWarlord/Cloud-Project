@@ -1,5 +1,6 @@
 import paramiko
 import subprocess
+import ipaddress
 
 def self_assess():
     cmd="powershell -Command [System.Environment]::OSVersion.VersionString"
@@ -22,6 +23,24 @@ def self_assess():
         
 
     return [os,proc,open_]
+
+def check_range_ip(start_ip,end_ip,username,password):
+    ip_range = ipaddress.summarize_address_range(ipaddress.IPv4Address(start_ip), ipaddress.IPv4Address(end_ip))
+    ips_within_range = []
+
+    for ip_network in ip_range:
+        ips_within_range.extend(str(ip) for ip in ip_network)
+
+    result_data = {}
+    
+    for ip in ips_within_range:
+        try:
+            results = connection(ip,username,password)
+            result_data[ip] = results
+        except:
+            pass
+    return result_data if len(result_data) > 0 else "No IPs detected in range"
+
 
 def connection(hostname,username,password):
 
@@ -78,16 +97,18 @@ def predict_server_type(running_applications, open_ports):
 
     result = [apps_port,apps_application]
 
+    result_percentages = []
+
     result[0].extend(result[1])
     percentage_set = set(result[0])
-
-    print("Percentage of predictions: \n")
     
     for i in percentage_set:
-        print(f"{i}: {(result[0].count(i)/len(result[0]))*100}%")
+        result_percentages.append((i,(result[0].count(i)/len(result[0]))*100))
+
+    sorted_result_percentages = sorted(result_percentages, key = lambda x:x[1], reverse = True)
 
     # If no known application's ports are open, suggest a generic server type
-    return result if len(apps_port) > 0 or len(apps_application) > 0 else "generic_server"
+    return sorted_result_percentages if len(result_percentages) > 0 else "generic_server"
 
 
 # Example usage with Paramiko data
@@ -96,12 +117,18 @@ open_ports = ["80", "443"]
 
 l = connection("localhost","11110","Blazing123")
 
-predicted_server_type = predict_server_type(l[1],l[2])
+predicted = predict_server_type(l[1],l[2])
+
+print(predicted)
 
 l = self_assess()
 
-print(l[1])
+l = check_range_ip('192.168.1.2','192.168.1.7','11110','Blazing123')
 
-predict_server_type(l[1],l[2])
+print(l)
+
+
+
+
 
 
