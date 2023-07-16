@@ -1,7 +1,6 @@
 import paramiko
 import subprocess
 import ipaddress
-
 def self_assess():
     cmd="powershell -Command [System.Environment]::OSVersion.VersionString"
     os=subprocess.run(cmd, shell=True, capture_output=True, text=True).stdout
@@ -9,10 +8,15 @@ def self_assess():
     cmd = "powershell -Command Get-Process"  
     proc = subprocess.run(cmd, shell=True, capture_output=True, text=True).stdout
 
-    print(proc)
-
     command = "Get-NetTCPConnection | Select-Object LocalAddress,LocalPort,RemoteAddress,RemotePort,State"
     open_ports = subprocess.run(['powershell.exe', '-Command', command], capture_output=True, text=True).stdout
+
+    proc1={}
+    proc=proc.split("\n")
+    for i in range(3,len(proc)-3):
+        t=proc[i].split()
+        proc1[t[len(t)-1]]=1
+    proc=list(proc1.keys())
 
 
     splitted = open_ports.split('\n')
@@ -23,6 +27,7 @@ def self_assess():
         
 
     return [os,proc,open_]
+
 
 def check_range_ip(start_ip,end_ip,username,password):
     ip_range = ipaddress.summarize_address_range(ipaddress.IPv4Address(start_ip), ipaddress.IPv4Address(end_ip))
