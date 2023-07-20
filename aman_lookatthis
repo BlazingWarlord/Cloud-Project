@@ -1,0 +1,123 @@
+import requests
+import json
+
+# Azure Migrate API endpoints
+azure_migrate_base_url = "https://management.azure.com"
+subscription_id = "YOUR_AZURE_SUBSCRIPTION_ID"
+resource_group = "YOUR_RESOURCE_GROUP_NAME"
+location = "eastus"  # Change this to the desired Azure region
+project_name = "YOUR_MIGRATION_PROJECT_NAME"
+server_name = "YOUR_ON_PREM_SERVER_NAME"
+discovery_name = "YOUR_DISCOVERY_NAME"
+
+# Replace the below values with your actual credentials or use environment variables
+client_id = "YOUR_AZURE_AD_APP_CLIENT_ID"
+client_secret = "YOUR_AZURE_AD_APP_CLIENT_SECRET"
+tenant_id = "YOUR_AZURE_AD_TENANT_ID"
+
+# Function to get Azure AD access token
+def get_access_token():
+    url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/token"
+    data = {
+        "grant_type": "client_credentials",
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "resource": "https://management.azure.com/"
+    }
+
+    response = requests.post(url, data=data)
+    response_data = response.json()
+    access_token = response_data["access_token"]
+    return access_token
+
+# Function to create an Azure Migrate project
+def create_migration_project(access_token):
+    url = f"{azure_migrate_base_url}/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.Migrate/projects/{project_name}?api-version=2019-10-01"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "location": location
+    }
+
+    response = requests.put(url, headers=headers, json=data)
+    response_data = response.json()
+    if response.status_code == 200:
+        print("Azure Migrate project created successfully.")
+        return response_data["id"]
+    else:
+        print("Failed to create Azure Migrate project.")
+        print(response_data)
+        return None
+
+# Function to discover the on-premises server
+def discover_on_prem_server(access_token, project_id):
+    url = f"{azure_migrate_base_url}/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.Migrate/projects/{project_name}/groups/{discovery_name}?api-version=2019-10-01"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "properties": {
+            "assessmentName": "MyAssessment",
+            "groupType": "Assessment",
+            "assessedResourceType": "OnPremises",
+            "displayName": "MyAssessmentGroup",
+            "discoveryPlanProperties": {
+                "discoveryStatus": "Enabled",
+                "machineDependencyStatus": "All"
+            }
+        }
+    }
+
+    response = requests.put(url, headers=headers, json=data)
+    response_data = response.json()
+    if response.status_code == 200:
+        print("On-premises server discovery initiated successfully.")
+    else:
+        print("Failed to initiate on-premises server discovery.")
+        print(response_data)
+
+# Function to start migration of the on-premises server
+def start_migration(access_token, project_id):
+    url = f"{azure_migrate_base_url}/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.Migrate/projects/{project_name}/groups/{discovery_name}/migrations/{server_name}?api-version=2019-10-01"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "properties": {
+            "migrationType": "Migrate",
+            "vMwareMachineDiskDetails": [],
+            "vmwareMachineNetworkDetails": [],
+            "vmwareMachineProperties": {
+                "diskType": "Standard_LRS",
+                "onPremisesApplianceEnabled": False,
+                "priority": "Priority3",
+                "machineSize": "Standard_D2s_v3"
+            }
+        }
+    }
+
+    response = requests.put(url, headers=headers, json=data)
+    response_data = response.json()
+    if response.status_code == 200:
+        print("Migration of on-premises server started successfully.")
+    else:
+        print("Failed to start migration of on-premises server.")
+        print(response_data)
+
+def main():
+    access_token = get_access_token()
+    if access_token:
+        project_id = create_migration_project(access_token)
+        if project_id:
+            discover_on_prem_server(access_token, project_id)
+            start_migration(access_token, project_id)
+
+if __name__ == "__main__":
+    main()
