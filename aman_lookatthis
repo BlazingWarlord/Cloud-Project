@@ -54,6 +54,10 @@ def create_migration_project(access_token):
 
 # Function to discover the on-premises server
 def discover_on_prem_server(access_token, project_id):
+    # Your code to discover on-premises WebSphere servers using third-party tools or scripts
+
+    # After discovery, populate the discovered servers and dependencies into Azure Migrate
+    # Example:
     url = f"{azure_migrate_base_url}/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.Migrate/projects/{project_name}/groups/{discovery_name}?api-version=2019-10-01"
     headers = {
         "Authorization": f"Bearer {access_token}",
@@ -62,14 +66,7 @@ def discover_on_prem_server(access_token, project_id):
 
     data = {
         "properties": {
-            "assessmentName": "MyAssessment",
-            "groupType": "Assessment",
-            "assessedResourceType": "OnPremises",
-            "displayName": "MyAssessmentGroup",
-            "discoveryPlanProperties": {
-                "discoveryStatus": "Enabled",
-                "machineDependencyStatus": "All"
-            }
+            # Populate the discovered servers and dependencies here
         }
     }
 
@@ -83,33 +80,9 @@ def discover_on_prem_server(access_token, project_id):
 
 # Function to start migration of the on-premises server
 def start_migration(access_token, project_id):
-    url = f"{azure_migrate_base_url}/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.Migrate/projects/{project_name}/groups/{discovery_name}/migrations/{server_name}?api-version=2019-10-01"
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json"
-    }
-
-    data = {
-        "properties": {
-            "migrationType": "Migrate",
-            "vMwareMachineDiskDetails": [],
-            "vmwareMachineNetworkDetails": [],
-            "vmwareMachineProperties": {
-                "diskType": "Standard_LRS",
-                "onPremisesApplianceEnabled": False,
-                "priority": "Priority3",
-                "machineSize": "Standard_D2s_v3"
-            }
-        }
-    }
-
-    response = requests.put(url, headers=headers, json=data)
-    response_data = response.json()
-    if response.status_code == 200:
-        print("Migration of on-premises server started successfully.")
-    else:
-        print("Failed to start migration of on-premises server.")
-        print(response_data)
+    # Your code to migrate WebSphere applications to Azure
+    # This may involve creating Azure VMs, setting up the Azure environment,
+    # migrating databases, etc.
 
 def main():
     access_token = get_access_token()
@@ -121,3 +94,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
